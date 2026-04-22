@@ -6,7 +6,7 @@ A subscription-based golf score tracking platform with monthly prize draws and c
 
 ## 🚀 Live Demo
 
-**Production:** [https://golf-platform.vercel.app](https://golf-platform.vercel.app)
+**Production:** [https://golf-platform-zeta.vercel.app](https://golf-platform-zeta.vercel.app)
 
 **Test Credentials:**
 
