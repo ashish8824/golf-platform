@@ -1,4 +1,3 @@
-// supabase/functions/create-checkout/index.ts
 import Stripe from "https://esm.sh/stripe@14.0.0";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
@@ -18,12 +17,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { userId, email, priceId, plan } = await req.json();
-    console.log("Creating checkout for:", { userId, email, priceId, plan });
+    const body = await req.json();
+    const { userId, email, priceId, plan } = body;
+
+    console.log("Request received:", { userId, email, priceId, plan });
 
     if (!priceId || !userId || !email) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
+        JSON.stringify({
+          error: "Missing required fields",
+          received: { userId, email, priceId },
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -36,12 +40,12 @@ Deno.serve(async (req) => {
       metadata: { supabase_user_id: userId },
     });
 
-    console.log("Created Stripe customer:", customer.id);
-
     const origin =
       req.headers.get("origin") ??
       Deno.env.get("SITE_URL") ??
       "https://golf-platform-zeta.vercel.app";
+
+    console.log("Using origin:", origin);
 
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
@@ -59,13 +63,13 @@ Deno.serve(async (req) => {
       },
     });
 
-    console.log("Created session:", session.id);
+    console.log("Session created:", session.id, session.url);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
-    console.error("Function error:", err);
+    console.error("Error:", err);
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
